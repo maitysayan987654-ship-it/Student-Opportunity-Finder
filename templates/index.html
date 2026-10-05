@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Opportunity Finder</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+    <div class="container">
+
+        <h1>Student Opportunity Finder</h1>
+
+        <p>
+            Find internships and jobs using live search data.
+        </p>
+
+
+        <!-- Search Form -->
+
+        <form method="POST">
+
+            <input
+                type="text"
+                name="query"
+                placeholder="e.g. Python"
+                required
+            >
+
+
+            <input
+                type="text"
+                name="location"
+                placeholder="e.g. Kolkata"
+                value="Kolkata"
+                required
+            >
+
+
+            <select name="search_type">
+
+                <option
+                    value="Internship"
+                    {% if search_type == "Internship" %}selected{% endif %}
+                >
+                    Internship
+                </option>
+
+
+                <option
+                    value="Job"
+                    {% if search_type == "Job" %}selected{% endif %}
+                >
+                    Job
+                </option>
+
+            </select>
+
+
+            <button type="submit">
+                Search Opportunities
+            </button>
+
+        </form>
+
+
+        {% if error_message %}
+
+            <!-- Error Message -->
+
+            <div class="filter-section">
+
+                <h2>Something went wrong</h2>
+
+                <p>
+                    {{ error_message }}
+                </p>
+
+            </div>
+
+
+        {% elif results %}
+
+            <!-- Skill Filter -->
+
+            <div class="filter-section">
+
+                <h3>Filter by Skill</h3>
+
+                <input
+                    type="text"
+                    id="skillFilter"
+                    placeholder="e.g. Python, SQL, React"
+                >
+
+            </div>
+
+
+            <!-- Results -->
+
+            <h2>Search Results</h2>
+
+            <p id="resultCount">
+                Showing {{ results|length }} opportunities
+            </p>
+
+
+            <div id="jobResults">
+
+                {% for job in results %}
+
+                    <div
+                        class="job-card"
+                        data-skills="{{ job.get('skills', [])|join(',')|lower }}"
+                    >
+
+                        <!-- Job Title -->
+
+                        <h2>
+                            {{ job.get('title', 'Untitled') }}
+                        </h2>
+
+
+                        <!-- Company -->
+
+                        <p>
+                            <strong>Company:</strong>
+                            {{ job.get('company_name', 'N/A') }}
+                        </p>
+
+
+                        <!-- Location -->
+
+                        <p>
+                            <strong>Location:</strong>
+                            {{ job.get('location', 'N/A') }}
+                        </p>
+
+
+                        <!-- Source -->
+
+                        {% if job.get('via') %}
+
+                            <p>
+                                <strong>Source:</strong>
+                                {{ job.get('via') }}
+                            </p>
+
+                        {% endif %}
+
+
+                        <!-- Posted / Job Type -->
+
+                        {% if job.get('detected_extensions') %}
+
+                            {% if job.get('detected_extensions').get('posted_at') %}
+
+                                <p>
+                                    <strong>Posted:</strong>
+                                    {{ job.get('detected_extensions').get('posted_at') }}
+                                </p>
+
+                            {% endif %}
+
+
+                            {% if job.get('detected_extensions').get('schedule_type') %}
+
+                                <p>
+                                    <strong>Job Type:</strong>
+                                    {{ job.get('detected_extensions').get('schedule_type') }}
+                                </p>
+
+                            {% endif %}
+
+                        {% endif %}
+
+
+                        <!-- Skills -->
+
+                        {% if job.get('skills') %}
+
+                            <div class="skills">
+
+                                <strong>Skills:</strong>
+
+                                {% for skill in job.get('skills') %}
+
+                                    <span class="skill-badge">
+                                        {{ skill }}
+                                    </span>
+
+                                {% endfor %}
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- Description -->
+
+                        {% if job.get('description') %}
+
+                            <p>
+
+                                {{ job.get('description')[:400] }}
+
+                                {% if job.get('description')|length > 400 %}
+                                    ...
+                                {% endif %}
+
+                            </p>
+
+                        {% endif %}
+
+
+                        <!-- Single Apply Button -->
+
+                        {% if job.get('apply_options') %}
+
+                            {% set first_option = job.get('apply_options')[0] %}
+
+                            {% if first_option.get('link') %}
+
+                                <a
+                                    href="{{ first_option.get('link') }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    View Opportunity
+                                </a>
+
+                            {% endif %}
+
+                        {% endif %}
+
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+
+        {% elif request.method == "POST" %}
+
+            <!-- No Results -->
+
+            <div class="filter-section">
+
+                <h2>No opportunities found</h2>
+
+                <p>
+                    No matching {{ search_type|lower }} opportunities
+                    were found for your search.
+                </p>
+
+                <p>
+                    Try another skill, location, or search type.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+
+    </div>
+
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+
+</html>
