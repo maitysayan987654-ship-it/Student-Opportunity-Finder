@@ -1,114 +1,87 @@
-\# Student Opportunity Finder
+# Student Opportunity Finder
 
+A web application that helps students discover internships and jobs using live Google Jobs search data through the SerpApi API.
 
+## 🚀 Features
 
-Student Opportunity Finder is a web application that helps students find relevant internships and jobs using live job search data from SerpApi.
+- Search internships and jobs using any skill or keyword
+- Search by location
+- Choose between Internship and Job opportunities
+- Get live job search results
+- Automatic detection of common technical skills
+- Smart relevance-based result ranking
+- Filter loaded results by detected skills
+- View company, location, source, schedule and posting information
+- View a short job description
+- Directly open the original opportunity
+- Responsive and student-friendly interface
 
+## 🔎 How It Works
 
+1. The user enters a skill or keyword.
+2. The user enters a preferred location.
+3. The user selects Internship or Job.
+4. The application sends the search request to SerpApi's Google Jobs API.
+5. SerpApi returns live structured job results.
+6. The backend processes and ranks the results.
+7. The frontend displays the opportunities in an easy-to-use format.
 
-Users can search opportunities by skill, location, and opportunity type.
+## 🧩 SerpApi Integration
 
+SerpApi is the core search-data source of this project.
 
+The application uses the Google Jobs API with:
 
-\## Features
+- `engine=google_jobs`
+- `q` for the user's search keyword
+- `location` for geographic search
+- SerpApi API key for authentication
 
+The application processes returned `jobs_results` and displays relevant opportunity information such as:
 
+- Job title
+- Company
+- Location
+- Source
+- Description
+- Skills
+- Posting information
+- Apply link
 
-\- Search for internships and jobs
+## 🛠️ Tech Stack
 
-\- Search by skill such as Python, Java, SQL, React, etc.
+### Frontend
+- HTML
+- CSS
+- JavaScript
 
-\- Search by location
+### Backend
+- Python
+- Flask
 
-\- Uses live Google Jobs data through SerpApi
+### API
+- SerpApi Google Jobs API
 
-\- Filters internship results to reduce irrelevant experienced roles
+### Environment
+- Python Virtual Environment
+- python-dotenv
 
-\- Extracts relevant technical skills from job descriptions
-
-\- Filter displayed results by skill
-
-\- Shows company, location, source, job type, posting information, and description
-
-\- Provides a direct opportunity link
-
-
-
-\## How SerpApi Is Used
-
-
-
-SerpApi is the core search data provider of this project.
-
-
-
-The application uses the SerpApi Google Jobs API to retrieve live job and internship opportunities.
-
-
-
-The backend sends the user's search query and location to SerpApi and receives job results in JSON format.
-
-
-
-These results are then processed and displayed in the web application.
-
-
-
-\## Technology Stack
-
-
-
-\- Python
-
-\- Flask
-
-\- HTML
-
-\- CSS
-
-\- JavaScript
-
-\- SerpApi Google Jobs API
-
-\- python-dotenv
-
-\- Requests
-
-
-
-\## Project Structure
-
-
+## 📁 Project Structure
 
 ```text
-
 Student-Opportunity-Finder/
-
 │
-
 ├── app.py
-
 ├── requirements.txt
-
+├── README.md
 ├── .env
-
 ├── .gitignore
-
 │
-
 ├── templates/
-
 │   └── index.html
-
 │
-
 ├── static/
-
 │   ├── style.css
-
 │   └── script.js
-
 │
-
 └── venv/
-
