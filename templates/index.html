@@ -21,83 +21,207 @@
 
     <div class="container">
 
-        <h1>Student Opportunity Finder</h1>
+        <!-- Header -->
 
-        <p>
-            Find internships and jobs using live search data.
-        </p>
+        <header class="hero">
+
+            <div class="hero-badge">
+                LIVE OPPORTUNITY SEARCH
+            </div>
+
+            <h1>
+                Student Opportunity Finder
+            </h1>
+
+            <p>
+                Find internships and jobs using live search data.
+            </p>
+
+            <p class="powered">
+                Powered by live SerpApi search data
+            </p>
+
+        </header>
 
 
         <!-- Search Form -->
 
-        <form method="POST">
+        <section class="search-box">
 
-            <input
-                type="text"
-                name="query"
-                placeholder="e.g. Python"
-                required
-            >
+            <form method="POST">
 
+                <div class="input-group">
 
-            <input
-                type="text"
-                name="location"
-                placeholder="e.g. Kolkata"
-                value="Kolkata"
-                required
-            >
+                    <label for="query">
+                        Skill or Keyword
+                    </label>
 
+                    <input
+                        type="text"
+                        id="query"
+                        name="query"
+                        placeholder="e.g. Python, Cybersecurity, Blockchain, UI/UX"
+                        value="{{ request.form.get('query', '') }}"
+                        required
+                    >
 
-            <select name="search_type">
+                    <small>
+                        Search for any skill or keyword
+                    </small>
 
-                <option
-                    value="Internship"
-                    {% if search_type == "Internship" %}selected{% endif %}
-                >
-                    Internship
-                </option>
+                </div>
 
 
-                <option
-                    value="Job"
-                    {% if search_type == "Job" %}selected{% endif %}
-                >
-                    Job
-                </option>
+                <div class="input-group">
 
-            </select>
+                    <label for="location">
+                        Location
+                    </label>
+
+                    <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        placeholder="e.g. Kolkata"
+                        value="{{ request.form.get('location', 'Kolkata') }}"
+                        required
+                    >
+
+                </div>
 
 
-            <button type="submit">
-                Search Opportunities
-            </button>
+                <div class="input-group">
 
-        </form>
+                    <label for="search_type">
+                        Opportunity Type
+                    </label>
 
+                    <select
+                        id="search_type"
+                        name="search_type"
+                    >
+
+                        <option
+                            value="Internship"
+                            {% if search_type == "Internship" %}
+                                selected
+                            {% endif %}
+                        >
+                            Internship
+                        </option>
+
+                        <option
+                            value="Job"
+                            {% if search_type == "Job" %}
+                                selected
+                            {% endif %}
+                        >
+                            Job
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <button type="submit">
+                    🔎 Search Opportunities
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <!-- Error Message -->
 
         {% if error_message %}
 
-            <!-- Error Message -->
+            <section class="message-card error-card">
 
-            <div class="filter-section">
+                <div class="message-icon">
+                    ⚠
+                </div>
 
-                <h2>Something went wrong</h2>
+                <div>
 
-                <p>
-                    {{ error_message }}
-                </p>
+                    <h2>
+                        Something went wrong
+                    </h2>
 
-            </div>
+                    <p>
+                        {{ error_message }}
+                    </p>
 
+                </div>
+
+            </section>
+
+
+        <!-- Search Results -->
 
         {% elif results %}
 
+            <section class="results-header">
+
+                <div>
+
+                    <h2>
+                        Search Results
+                    </h2>
+
+                    <p>
+                        Live opportunities matching your search
+                    </p>
+
+                </div>
+
+                <div class="result-number">
+
+                    <span id="resultCount">
+                        {{ results|length }}
+                    </span>
+
+                    <small>
+                        opportunities
+                    </small>
+
+                </div>
+
+            </section>
+
+
+            <!-- Search Summary -->
+
+            <section class="search-summary">
+
+                <span>
+                    🔎
+                    <strong>
+                        {{ request.form.get('query', '') }}
+                    </strong>
+                </span>
+
+                <span>
+                    📍
+                    {{ request.form.get('location', '') }}
+                </span>
+
+                <span>
+                    💼
+                    {{ search_type }}
+                </span>
+
+            </section>
+
+
             <!-- Skill Filter -->
 
-            <div class="filter-section">
+            <section class="filter-section">
 
-                <h3>Filter by Skill</h3>
+                <label for="skillFilter">
+                    Filter results by detected skill
+                </label>
 
                 <input
                     type="text"
@@ -105,86 +229,113 @@
                     placeholder="e.g. Python, SQL, React"
                 >
 
-            </div>
+                <small>
+                    This filter only filters the results already loaded.
+                    Your main search supports any skill or keyword.
+                </small>
+
+            </section>
 
 
-            <!-- Results -->
-
-            <h2>Search Results</h2>
-
-            <p id="resultCount">
-                Showing {{ results|length }} opportunities
-            </p>
-
+            <!-- Job Results -->
 
             <div id="jobResults">
 
                 {% for job in results %}
 
-                    <div
+                    <article
                         class="job-card"
                         data-skills="{{ job.get('skills', [])|join(',')|lower }}"
                     >
 
-                        <!-- Job Title -->
+                        <!-- Job Header -->
 
-                        <h2>
-                            {{ job.get('title', 'Untitled') }}
-                        </h2>
+                        <div class="job-header">
 
+                            <div>
 
-                        <!-- Company -->
+                                <h2>
+                                    {{ job.get(
+                                        'title',
+                                        'Untitled Opportunity'
+                                    ) }}
+                                </h2>
 
-                        <p>
-                            <strong>Company:</strong>
-                            {{ job.get('company_name', 'N/A') }}
-                        </p>
+                                <p class="company">
 
+                                    {{ job.get(
+                                        'company_name',
+                                        'Company not specified'
+                                    ) }}
 
-                        <!-- Location -->
-
-                        <p>
-                            <strong>Location:</strong>
-                            {{ job.get('location', 'N/A') }}
-                        </p>
-
-
-                        <!-- Source -->
-
-                        {% if job.get('via') %}
-
-                            <p>
-                                <strong>Source:</strong>
-                                {{ job.get('via') }}
-                            </p>
-
-                        {% endif %}
-
-
-                        <!-- Posted / Job Type -->
-
-                        {% if job.get('detected_extensions') %}
-
-                            {% if job.get('detected_extensions').get('posted_at') %}
-
-                                <p>
-                                    <strong>Posted:</strong>
-                                    {{ job.get('detected_extensions').get('posted_at') }}
                                 </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Job Information -->
+
+                        <div class="job-info">
+
+                            <span>
+                                📍
+                                {{ job.get(
+                                    'location',
+                                    'Location not specified'
+                                ) }}
+                            </span>
+
+
+                            {% if job.get('via') %}
+
+                                <span>
+                                    🌐
+                                    Source:
+                                    {{ job.get('via') }}
+                                </span>
 
                             {% endif %}
 
 
-                            {% if job.get('detected_extensions').get('schedule_type') %}
+                            {% if job.get('detected_extensions') %}
 
-                                <p>
-                                    <strong>Job Type:</strong>
-                                    {{ job.get('detected_extensions').get('schedule_type') }}
-                                </p>
+                                {% if job.get('detected_extensions').get('posted_at') %}
+
+                                    <span>
+                                        🕒
+                                        {{ job.get(
+                                            'detected_extensions'
+                                        ).get('posted_at') }}
+                                    </span>
+
+                                {% endif %}
+
+
+                                {% if job.get('detected_extensions').get('schedule_type') %}
+
+                                    <span>
+                                        💼
+                                        {{ job.get(
+                                            'detected_extensions'
+                                        ).get('schedule_type') }}
+                                    </span>
+
+                                {% endif %}
+
+
+                                {% if job.get('detected_extensions').get('work_from_home') %}
+
+                                    <span class="remote-badge">
+                                        🏠 Remote
+                                    </span>
+
+                                {% endif %}
 
                             {% endif %}
 
-                        {% endif %}
+                        </div>
 
 
                         <!-- Skills -->
@@ -193,7 +344,9 @@
 
                             <div class="skills">
 
-                                <strong>Skills:</strong>
+                                <strong>
+                                    🛠 Skills:
+                                </strong>
 
                                 {% for skill in job.get('skills') %}
 
@@ -212,11 +365,11 @@
 
                         {% if job.get('description') %}
 
-                            <p>
+                            <p class="description">
 
-                                {{ job.get('description')[:400] }}
+                                {{ job.get('description')[:450] }}
 
-                                {% if job.get('description')|length > 400 %}
+                                {% if job.get('description')|length > 450 %}
                                     ...
                                 {% endif %}
 
@@ -225,7 +378,7 @@
                         {% endif %}
 
 
-                        <!-- Single Apply Button -->
+                        <!-- Apply Button -->
 
                         {% if job.get('apply_options') %}
 
@@ -234,45 +387,71 @@
                             {% if first_option.get('link') %}
 
                                 <a
+                                    class="apply-button"
                                     href="{{ first_option.get('link') }}"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
-                                    View Opportunity
+                                    View Opportunity →
                                 </a>
 
                             {% endif %}
 
                         {% endif %}
 
-
-                    </div>
+                    </article>
 
                 {% endfor %}
 
             </div>
 
 
+        <!-- No Results -->
+
         {% elif request.method == "POST" %}
 
-            <!-- No Results -->
+            <section class="message-card">
 
-            <div class="filter-section">
+                <div class="message-icon">
+                    🔍
+                </div>
 
-                <h2>No opportunities found</h2>
+                <div>
 
-                <p>
-                    No matching {{ search_type|lower }} opportunities
-                    were found for your search.
-                </p>
+                    <h2>
+                        No opportunities found
+                    </h2>
 
-                <p>
-                    Try another skill, location, or search type.
-                </p>
+                    <p>
+                        We couldn't find matching
+                        {{ search_type|lower }}
+                        opportunities for your search.
+                    </p>
 
-            </div>
+                    <p>
+                        Try another skill, keyword, or location.
+                    </p>
+
+                </div>
+
+            </section>
 
         {% endif %}
+
+
+        <!-- Footer -->
+
+        <footer>
+
+            <p>
+                Student Opportunity Finder
+            </p>
+
+            <span>
+                Live job search powered by SerpApi
+            </span>
+
+        </footer>
 
 
     </div>

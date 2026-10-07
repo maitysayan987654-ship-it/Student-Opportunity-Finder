@@ -59,12 +59,42 @@ def home():
 
     if request.method == "POST":
 
-        query = request.form.get("query", "").strip()
-        location = request.form.get("location", "").strip()
+        query = request.form.get(
+            "query",
+            ""
+        ).strip()
+
+        location = request.form.get(
+            "location",
+            ""
+        ).strip()
+
         search_type = request.form.get(
             "search_type",
             "Internship"
         )
+
+        # --------------------------------
+        # Validate input
+        # --------------------------------
+
+        if not query or not location:
+
+            error_message = (
+                "Please enter both a skill or keyword "
+                "and a location."
+            )
+
+            return render_template(
+                "index.html",
+                results=results,
+                search_type=search_type,
+                error_message=error_message
+            )
+
+        # --------------------------------
+        # Build search query
+        # --------------------------------
 
         if search_type == "Internship":
             final_query = query + " internship"
@@ -73,6 +103,10 @@ def home():
 
         print("SEARCH QUERY:", final_query)
         print("LOCATION:", location)
+
+        # --------------------------------
+        # SerpApi parameters
+        # --------------------------------
 
         params = {
             "engine": "google_jobs",
@@ -93,6 +127,10 @@ def home():
 
             data = response.json()
 
+            # --------------------------------
+            # Handle API error
+            # --------------------------------
+
             if "error" in data:
 
                 error_message = (
@@ -112,33 +150,44 @@ def home():
                     []
                 )
 
+                # --------------------------------
+                # Location aliases
+                # --------------------------------
+
                 selected_location = location.lower()
 
                 location_aliases = {
+
                     "bangalore": [
                         "bangalore",
                         "bengaluru"
                     ],
+
                     "bengaluru": [
                         "bangalore",
                         "bengaluru"
                     ],
+
                     "kolkata": [
                         "kolkata",
                         "calcutta"
                     ],
+
                     "calcutta": [
                         "kolkata",
                         "calcutta"
                     ],
+
                     "mumbai": [
                         "mumbai",
                         "bombay"
                     ],
+
                     "chennai": [
                         "chennai",
                         "madras"
                     ],
+
                     "delhi": [
                         "delhi",
                         "new delhi"
@@ -149,6 +198,14 @@ def home():
                     selected_location,
                     [selected_location]
                 )
+
+                requested_skill = query.lower()
+
+                relevant_results = []
+
+                # --------------------------------
+                # Process jobs
+                # --------------------------------
 
                 for job in all_results:
 
@@ -167,14 +224,48 @@ def home():
                         ""
                     ).lower()
 
-                    location_match = (
-                        any(
-                            city in job_location
-                            for city in search_locations
-                        )
-                        or "remote" in job_location
-                        or "anywhere" in job_location
+                    company = job.get(
+                        "company_name",
+                        ""
+                    ).lower()
+
+                    # --------------------------------
+                    # Better Location Matching
+                    # --------------------------------
+
+                    location_text = (
+                        job_location
+                        + " "
+                        + title
+                        + " "
+                        + description
+                    ).lower()
+
+                    location_match = any(
+                        city in location_text
+                        for city in search_locations
                     )
+
+                    remote_match = (
+                        "remote" in job_location
+                        or "work from home" in description
+                        or "remote" in description
+                    )
+
+                    if not location_match and not remote_match:
+                        continue
+
+                    # --------------------------------
+                    # Extract known skills
+                    # --------------------------------
+
+                    job["skills"] = extract_skills(
+                        description
+                    )
+
+                    # --------------------------------
+                    # Internship filtering
+                    # --------------------------------
 
                     if search_type == "Internship":
 
@@ -213,16 +304,152 @@ def home():
                             for keyword in senior_keywords
                         )
 
-                        if not is_internship or is_senior:
+                        if not is_internship:
                             continue
 
-                    if location_match:
+                        if is_senior:
+                            continue
 
-                        job["skills"] = extract_skills(
-                            description
-                        )
+                    # --------------------------------
+                    # Smart relevance scoring
+                    # --------------------------------
 
-                        results.append(job)
+                    relevance_score = 0
+
+                    # Exact search phrase in title
+                    if requested_skill in title:
+                        relevance_score += 10
+
+                    # Exact search phrase in description
+                    if requested_skill in description:
+                        relevance_score += 5
+
+                    # Exact search phrase in company
+                    if requested_skill in company:
+                        relevance_score += 2
+
+                    # Match against detected skills
+                    if any(
+                        requested_skill == skill.lower()
+                        for skill in job["skills"]
+                    ):
+                        relevance_score += 8
+
+                    # --------------------------------
+                    # Multi-word search support
+                    # --------------------------------
+
+                    query_words = [
+                        word
+                        for word in requested_skill.split()
+                        if len(word) > 2
+                    ]
+
+                    for word in query_words:
+
+                        if word in title:
+                            relevance_score += 2
+
+                        elif word in description:
+                            relevance_score += 1
+
+                    # --------------------------------
+                    # Internship relevance bonus
+                    # --------------------------------
+
+                    if search_type == "Internship":
+
+                        if "intern" in title:
+                            relevance_score += 3
+
+                        elif "internship" in description:
+                            relevance_score += 2
+
+                    # --------------------------------
+                    # Fresher / entry-level bonus
+                    # --------------------------------
+
+                    fresher_keywords = [
+                        "fresher",
+                        "freshers",
+                        "entry level",
+                        "entry-level",
+                        "no experience",
+                        "0-1 years",
+                        "0 to 1 years"
+                    ]
+
+                    if any(
+                        keyword in title
+                        or keyword in description
+                        for keyword in fresher_keywords
+                    ):
+                        relevance_score += 1
+
+                    # --------------------------------
+                    # Save relevance score
+                    # --------------------------------
+
+                    job["relevance_score"] = (
+                        relevance_score
+                    )
+
+                    # --------------------------------
+                    # Keep location-matching results
+                    #
+                    # Main search supports ANY
+                    # skill or keyword.
+                    # --------------------------------
+
+                    relevant_results.append(job)
+
+                # --------------------------------
+                # Remove duplicate jobs
+                # --------------------------------
+
+                unique_results = []
+
+                seen_jobs = set()
+
+                for job in relevant_results:
+
+                    job_key = (
+                        job.get(
+                            "title",
+                            ""
+                        ).lower().strip(),
+
+                        job.get(
+                            "company_name",
+                            ""
+                        ).lower().strip(),
+
+                        job.get(
+                            "location",
+                            ""
+                        ).lower().strip()
+                    )
+
+                    if job_key in seen_jobs:
+                        continue
+
+                    seen_jobs.add(job_key)
+
+                    unique_results.append(job)
+
+                # --------------------------------
+                # Sort by relevance
+                # --------------------------------
+
+                unique_results.sort(
+                    key=lambda job: job.get(
+                        "relevance_score",
+                        0
+                    ),
+                    reverse=True
+                )
+
+                results = unique_results
 
         except requests.RequestException as error:
 
